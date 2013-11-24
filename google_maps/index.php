@@ -29,12 +29,16 @@ Plugin update URI: http://www.osclass.org/files/plugins/google_maps/update.php
         $sRegion = (isset($aItem['s_region']) ? $aItem['s_region'] : '');
         $sCountry = (isset($aItem['s_country']) ? $aItem['s_country'] : '');
         $address = sprintf('%s, %s, %s, %s', $sAddress, $sCity, $sRegion, $sCountry);
-        $response = osc_file_get_contents(sprintf('http://maps.google.com/maps/geo?q=%s&output=json&sensor=false', urlencode($address)));
+        $response = osc_file_get_contents(sprintf('http://maps.googleapis.com/maps/api/geocode/json?address=%s&sensor=false', urlencode($address)));
         $jsonResponse = json_decode($response);
-        if (isset($jsonResponse->Placemark) && count($jsonResponse->Placemark[0]) > 0) {
-            $coord = $jsonResponse->Placemark[0]->Point->coordinates;
-            ItemLocation::newInstance()->update (array('d_coord_lat' => $coord[1]
-                                                      ,'d_coord_long' => $coord[0])
+        
+        if (isset($jsonResponse->results[0]->geometry->location) && count($jsonResponse->results[0]->geometry->location) > 0) 		{
+        	$location = $jsonResponse->results[0]->geometry->location;
+        	$lat = $location->lat;
+        	$lng = $location->lng;
+        
+            ItemLocation::newInstance()->update (array('d_coord_lat' => $lat
+                                                      ,'d_coord_long' => $lng)
                                                 ,array('fk_i_item_id' => $itemId));
         }
     }
